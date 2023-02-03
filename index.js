@@ -156,7 +156,7 @@ function animate() {
   ) {
     player.isAttacking = false;
     // enemy health bar decrease when hit
-    enemy.health -= 20;
+    enemy.health -= 5;
     document.querySelector("#enemyHealth").style.width = enemy.health + "%";
   }
 
@@ -169,7 +169,7 @@ function animate() {
     enemy.isAttacking
   ) {
     enemy.isAttacking = false;
-    player.health -= 20;
+    player.health -= 5;
     document.querySelector("#playerHealth").style.width = player.health + "%";
   }
 

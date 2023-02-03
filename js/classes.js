@@ -20,14 +20,22 @@ class Sprite {
 
     // create max frams
     this.framesMax = framesMax;
+
+    // create current frame
+    this.framesCurrent = 0;
+
+    // slow down animation
+    // how many frames has elapsed
+    this.framesElapsed = 0;
+    // how many frames we need to go through - the lower it is the faster it will go
+    this.framesHold = 15;
   }
 
   draw() {
     c.drawImage(
       this.image,
-
       //   cropping the shop image
-      0,
+      this.framesCurrent * (this.image.width / this.framesMax),
       0,
       this.image.width / this.framesMax,
       this.image.height,
@@ -40,6 +48,15 @@ class Sprite {
 
   update() {
     this.draw();
+    this.framesElapsed++;
+
+    if (this.framesElapsed % this.framesHold === 0) {
+      if (this.framesCurrent < this.framesMax - 1) {
+        this.framesCurrent++;
+      } else {
+        this.framesCurrent = 0;
+      }
+    }
   }
 }
 
