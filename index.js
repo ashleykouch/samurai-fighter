@@ -12,102 +12,34 @@ canvas.height = 576;
 // (argumeents: x, y, width, height)
 c.fillRect(0, 0, canvas.width, canvas.height);
 
+// insert background
+const background = new Sprite({
+  position: {
+    x: 0,
+    y: 0,
+  },
+  imageSrc: "./imgs/background.png",
+});
+
+// insert shop background for animation
+const shop = new Sprite({
+  position: {
+    x: 620,
+    y: 128,
+  },
+  imageSrc: "./imgs/shop.png",
+  scale: 2.75,
+  framesMax: 6,
+});
+
 // CREATING PLAYER AND ENEMY
 
 // create a global variable for gravity after defining velocity as there is a gap between the player object and the bottom of the canvas
 
-const gravity = 0.7;
-
-// create class to create object
-
-class Sprite {
-  // one main property in game dev on any object is position. passing a paramter as object makes it easier to run the code
-  constructor({ position, velocity, color = "red", offset }) {
-    // player properties
-    this.position = position;
-    // once we create our infinite loop (animate function below), we can apply it to our player and enemy positions
-    this.velocity = velocity;
-    // add width property
-    this.width = 50;
-    // add a height property
-    this.height = 150;
-    // create a variable to allow the last key pressed to take priority (overridin gthe direction in which players should be moving)
-    this.lastKey;
-
-    // ATTACKS
-    // attack properties
-    this.attackBox = {
-      // ensure position for player and enemy is different
-      position: {
-        x: this.position.x,
-        y: this.position.y,
-      },
-      offset,
-      width: 100,
-      height: 50,
-    };
-
-    this.color = color;
-    this.isAttacking;
-  }
-
-  //   what player looks like
-  draw() {
-    // ensure it differenciates from black canvas
-    c.fillStyle = this.color;
-    // referencing the object below using the constructor class above
-    c.fillRect(this.position.x, this.position.y, this.width, this.height);
-
-    // attack box drawing
-    // only show attack box when attacking
-    if (this.isAttacking) {
-      c.fillStyle = "green";
-      c.fillRect(
-        this.attackBox.position.x,
-        this.attackBox.position.y,
-        this.attackBox.width,
-        this.attackBox.height
-      );
-    }
-  }
-
-  //   when moving objects around, it is a good idea to initiate a new method in our class
-  update() {
-    this.draw();
-    // offset enemy attackbox position as well (50 is width of sprite)
-    this.attackBox.position.x = this.position.x + this.attackBox.offset.x;
-    this.attackBox.position.y = this.position.y;
-
-    // overtime, y will have 10 pixels moved each time it loops
-    // this.position.y += 10;
-
-    // reference how the player will move on the x axis
-    this.position.x += this.velocity.x;
-
-    // to ensure that the players stop moving at the bottom of the canvas, we need to add velocity
-    this.position.y += this.velocity.y;
-
-    // if the position of the height of the velocity is greater than the height of the canvas, set the velocity to 0 which stops the object (player) from moving past the canvas
-    if (this.position.y + this.height + this.velocity.y >= canvas.height) {
-      this.velocity.y = 0;
-    }
-    // gravity is only added if the object is above canvas height
-    else this.velocity.y += gravity;
-  }
-
-  // create an attack method (ie drawing out weapon)
-
-  attack() {
-    this.isAttacking = true;
-    // set a timer to activate for a certain period of time
-    setTimeout(() => {
-      this.isAttacking = false;
-    }, 100);
-  }
-}
+const gravity = 0.8;
 
 // create player
-const player = new Sprite({
+const player = new Fighter({
   position: {
     x: 0,
     y: 0,
@@ -127,7 +59,7 @@ const player = new Sprite({
 // player.draw();
 
 // create enemy
-const enemy = new Sprite({
+const enemy = new Fighter({
   position: {
     x: 400,
     y: 100,
@@ -170,19 +102,7 @@ const keys = {
   },
 };
 
-// function for collision between two rectangles
-function rectangularCollision({ rectangle1, rectangle2 }) {
-  return (
-    rectangle1.attackBox.position.x + rectangle1.attackBox.width >=
-      rectangle2.position.x &&
-    rectangle1.attackBox.position.x <=
-      rectangle2.position.x + rectangle2.width &&
-    //   detect for play collision on y axis
-    rectangle1.attackBox.position.y + rectangle1.attackBox.height >=
-      rectangle2.position.y &&
-    rectangle1.attackBox.position.y <= rectangle2.position.y + rectangle2.height
-  );
-}
+decreaseTimer();
 
 // adding gravity and velocity by creating an infinite animation loop
 function animate() {
@@ -190,6 +110,12 @@ function animate() {
   //   make sure to clear the canvas after every loop
   c.fillStyle = "black";
   c.fillRect(0, 0, canvas.width, canvas.height);
+
+  //   render background by calling update to draw the image
+  background.update();
+
+  //   render shop by calling update to draw the image
+  shop.update();
   //   ensure our player and enemy is called every frame within our animation loop
   player.update();
   enemy.update();
@@ -200,18 +126,18 @@ function animate() {
   player.velocity.x = 0;
 
   if (keys.a.pressed && player.lastKey === "a") {
-    player.velocity.x = -5;
+    player.velocity.x = -3;
   } else if (keys.d.pressed && player.lastKey == "d") {
-    player.velocity.x = 5;
+    player.velocity.x = 3;
   }
 
   //   enemy movement
   enemy.velocity.x = 0;
 
   if (keys.ArrowLeft.pressed && enemy.lastKey === "ArrowLeft") {
-    enemy.velocity.x = -5;
+    enemy.velocity.x = -3;
   } else if (keys.ArrowRight.pressed && enemy.lastKey == "ArrowRight") {
-    enemy.velocity.x = 5;
+    enemy.velocity.x = 3;
   }
 
   //   detect for player collisions on x axis
@@ -229,7 +155,9 @@ function animate() {
     player.isAttacking
   ) {
     player.isAttacking = false;
-    console.log("go");
+    // enemy health bar decrease when hit
+    enemy.health -= 20;
+    document.querySelector("#enemyHealth").style.width = enemy.health + "%";
   }
 
   //   enemy attacking
@@ -241,7 +169,13 @@ function animate() {
     enemy.isAttacking
   ) {
     enemy.isAttacking = false;
-    console.log("enemy attack succesful");
+    player.health -= 20;
+    document.querySelector("#playerHealth").style.width = player.health + "%";
+  }
+
+  //   end game if a players health bar reaches 0
+  if (enemy.health <= 0 || player.health <= 0) {
+    determineWinner({ player, enemy, timerId });
   }
 }
 
@@ -314,5 +248,3 @@ window.addEventListener("keyup", (event) => {
       break;
   }
 });
-
-// HEALTH BAR INTERFACE
