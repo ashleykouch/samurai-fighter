@@ -200,7 +200,7 @@ window.addEventListener("keydown", (event) => {
       // beacause we added gravity, the player will always fall
       player.velocity.y = -20;
       break;
-    case " ":
+    case "g":
       player.attack();
       break;
 
@@ -219,7 +219,7 @@ window.addEventListener("keydown", (event) => {
       // beacause we added gravity, the player will always fall
       enemy.velocity.y = -20;
       break;
-    case "ArrowDown":
+    case "l":
       enemy.attack();
       break;
   }
