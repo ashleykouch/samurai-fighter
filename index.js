@@ -22,7 +22,7 @@ const gravity = 0.7;
 
 class Sprite {
   // one main property in game dev on any object is position. passing a paramter as object makes it easier to run the code
-  constructor({ position, velocity, color = "red" }) {
+  constructor({ position, velocity, color = "red", offset }) {
     // player properties
     this.position = position;
     // once we create our infinite loop (animate function below), we can apply it to our player and enemy positions
@@ -34,14 +34,21 @@ class Sprite {
     // create a variable to allow the last key pressed to take priority (overridin gthe direction in which players should be moving)
     this.lastKey;
 
+    // ATTACKS
     // attack properties
     this.attackBox = {
-      position: this.position,
+      // ensure position for player and enemy is different
+      position: {
+        x: this.position.x,
+        y: this.position.y,
+      },
+      offset,
       width: 100,
       height: 50,
     };
 
     this.color = color;
+    this.isAttacking;
   }
 
   //   what player looks like
@@ -52,18 +59,24 @@ class Sprite {
     c.fillRect(this.position.x, this.position.y, this.width, this.height);
 
     // attack box drawing
-    c.fillStyle = "green";
-    c.fillRect(
-      this.attackBox.position.x,
-      this.attackBox.position.y,
-      this.attackBox.width,
-      this.attackBox.height
-    );
+    // only show attack box when attacking
+    if (this.isAttacking) {
+      c.fillStyle = "green";
+      c.fillRect(
+        this.attackBox.position.x,
+        this.attackBox.position.y,
+        this.attackBox.width,
+        this.attackBox.height
+      );
+    }
   }
 
   //   when moving objects around, it is a good idea to initiate a new method in our class
   update() {
     this.draw();
+    // offset enemy attackbox position as well (50 is width of sprite)
+    this.attackBox.position.x = this.position.x + this.attackBox.offset.x;
+    this.attackBox.position.y = this.position.y;
 
     // overtime, y will have 10 pixels moved each time it loops
     // this.position.y += 10;
@@ -77,10 +90,19 @@ class Sprite {
     // if the position of the height of the velocity is greater than the height of the canvas, set the velocity to 0 which stops the object (player) from moving past the canvas
     if (this.position.y + this.height + this.velocity.y >= canvas.height) {
       this.velocity.y = 0;
-    } else {
-      // gravity is only added if the object is above canvas height
-      this.velocity.y += gravity;
     }
+    // gravity is only added if the object is above canvas height
+    else this.velocity.y += gravity;
+  }
+
+  // create an attack method (ie drawing out weapon)
+
+  attack() {
+    this.isAttacking = true;
+    // set a timer to activate for a certain period of time
+    setTimeout(() => {
+      this.isAttacking = false;
+    }, 100);
   }
 }
 
@@ -92,6 +114,10 @@ const player = new Sprite({
   },
   // player does not move by default
   velocity: {
+    x: 0,
+    y: 0,
+  },
+  offset: {
     x: 0,
     y: 0,
   },
@@ -112,6 +138,10 @@ const enemy = new Sprite({
     y: 0,
   },
   color: "blue",
+  offset: {
+    x: -50,
+    y: 0,
+  },
 });
 
 // call our enemy - to see intial position
@@ -139,6 +169,20 @@ const keys = {
     pressed: false,
   },
 };
+
+// function for collision between two rectangles
+function rectangularCollision({ rectangle1, rectangle2 }) {
+  return (
+    rectangle1.attackBox.position.x + rectangle1.attackBox.width >=
+      rectangle2.position.x &&
+    rectangle1.attackBox.position.x <=
+      rectangle2.position.x + rectangle2.width &&
+    //   detect for play collision on y axis
+    rectangle1.attackBox.position.y + rectangle1.attackBox.height >=
+      rectangle2.position.y &&
+    rectangle1.attackBox.position.y <= rectangle2.position.y + rectangle2.height
+  );
+}
 
 // adding gravity and velocity by creating an infinite animation loop
 function animate() {
@@ -170,14 +214,34 @@ function animate() {
     enemy.velocity.x = 5;
   }
 
-  //   detect for player collisions
+  //   detect for player collisions on x axis
+
+  //   detect for play collision on y axis
   // if the side of the attack box touches the enemy
 
+  //   player attacking
   if (
-    player.attackBox.position.x + player.attackBox.width >= enemy.position.x &&
-    player.attackBox.position.x <= enemy.position.x + enemy.width
+    rectangularCollision({
+      rectangle1: player,
+      rectangle2: enemy,
+    }) &&
+    // add conditional for if player is attacking
+    player.isAttacking
   ) {
+    player.isAttacking = false;
     console.log("go");
+  }
+
+  //   enemy attacking
+  if (
+    rectangularCollision({
+      rectangle1: enemy,
+      rectangle2: player,
+    }) &&
+    enemy.isAttacking
+  ) {
+    enemy.isAttacking = false;
+    console.log("enemy attack succesful");
   }
 }
 
@@ -187,7 +251,6 @@ animate();
 
 // every time we press down
 window.addEventListener("keydown", (event) => {
-  console.log(event.key);
   switch (event.key) {
     case "d":
       // call code that moves player - move player by 1 frame for ever loop
@@ -202,6 +265,9 @@ window.addEventListener("keydown", (event) => {
     case "w":
       // beacause we added gravity, the player will always fall
       player.velocity.y = -20;
+      break;
+    case " ":
+      player.attack();
       break;
 
     //   enemy cases
@@ -219,8 +285,10 @@ window.addEventListener("keydown", (event) => {
       // beacause we added gravity, the player will always fall
       enemy.velocity.y = -20;
       break;
+    case "ArrowDown":
+      enemy.attack();
+      break;
   }
-  console.log(event.key);
 });
 
 // listen for event when play stops pressing on key
@@ -245,7 +313,6 @@ window.addEventListener("keyup", (event) => {
       keys.ArrowLeft.pressed = false;
       break;
   }
-  console.log(event.key);
 });
 
-// ATTACKS
+// HEALTH BAR INTERFACE
