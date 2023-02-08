@@ -2,7 +2,13 @@
 
 class Sprite {
   // one main property in game dev on any object is position. passing a paramter as object makes it easier to run the code
-  constructor({ position, imageSrc, scale = 1, framesMax = 1 }) {
+  constructor({
+    position,
+    imageSrc,
+    scale = 1,
+    framesMax = 1,
+    offset = { x: 0, y: 0 },
+  }) {
     // player properties
     this.position = position;
 
@@ -29,6 +35,9 @@ class Sprite {
     this.framesElapsed = 0;
     // how many frames we need to go through - the lower it is the faster it will go
     this.framesHold = 15;
+
+    // offset character
+    this.offset = offset;
   }
 
   draw() {
@@ -39,15 +48,16 @@ class Sprite {
       0,
       this.image.width / this.framesMax,
       this.image.height,
-      this.position.x,
-      this.position.y,
+      this.position.x - this.offset.x,
+      this.position.y - this.offset.y,
       (this.image.width / this.framesMax) * this.scale,
       this.image.height * this.scale
     );
   }
 
-  update() {
-    this.draw();
+  //   method for moving animation by frames
+
+  animateFrames() {
     this.framesElapsed++;
 
     if (this.framesElapsed % this.framesHold === 0) {
@@ -58,13 +68,37 @@ class Sprite {
       }
     }
   }
+
+  update() {
+    this.draw();
+    this.animateFrames();
+  }
 }
 
-class Fighter {
+// take all methods from sprite and implement them to the fighter class
+class Fighter extends Sprite {
   // one main property in game dev on any object is position. passing a paramter as object makes it easier to run the code
-  constructor({ position, velocity, color = "red", offset }) {
+  constructor({
+    position,
+    velocity,
+    color = "red",
+    imageSrc,
+    scale = 1,
+    framesMax = 1,
+    offset = { x: 0, y: 0 },
+    // create an object that contains all sprites for the specific fghter
+    sprites,
+  }) {
+    // call the constructor of the parent
+    super({
+      position,
+      imageSrc,
+      scale,
+      framesMax,
+      offset,
+    });
     // player properties
-    this.position = position;
+    // this.position = position;
     // once we create our infinite loop (animate function below), we can apply it to our player and enemy positions
     this.velocity = velocity;
     // add width property
@@ -90,31 +124,49 @@ class Fighter {
     this.color = color;
     this.isAttacking;
     this.health = 100;
+    // create current frame
+    this.framesCurrent = 0;
+
+    // slow down animation
+    // how many frames has elapsed
+    this.framesElapsed = 0;
+    // how many frames we need to go through - the lower it is the faster it will go
+    this.framesHold = 15;
+    // pass through sprite object
+    this.sprites = sprites;
+
+    // loop thorugh sprite object
+    for (const sprite in sprites) {
+      sprites[sprite].image = new Image();
+      sprites[sprite].image.src = sprites[sprite].imageSrc;
+    }
   }
 
   //   what player looks like
-  draw() {
-    // ensure it differenciates from black canvas
-    c.fillStyle = this.color;
-    // referencing the object below using the constructor class above
-    c.fillRect(this.position.x, this.position.y, this.width, this.height);
+  //   no longer needed as fighters will not be a box
+  //   draw() {
+  //     // ensure it differenciates from black canvas
+  //     c.fillStyle = this.color;
+  //     // referencing the object below using the constructor class above
+  //     c.fillRect(this.position.x, this.position.y, this.width, this.height);
 
-    // attack box drawing
-    // only show attack box when attacking
-    if (this.isAttacking) {
-      c.fillStyle = "green";
-      c.fillRect(
-        this.attackBox.position.x,
-        this.attackBox.position.y,
-        this.attackBox.width,
-        this.attackBox.height
-      );
-    }
-  }
+  //     // attack box drawing
+  //     // only show attack box when attacking
+  //     if (this.isAttacking) {
+  //       c.fillStyle = "green";
+  //       c.fillRect(
+  //         this.attackBox.position.x,
+  //         this.attackBox.position.y,
+  //         this.attackBox.width,
+  //         this.attackBox.height
+  //       );
+  //     }
+  //   }
 
   //   when moving objects around, it is a good idea to initiate a new method in our class
   update() {
     this.draw();
+    this.animateFrames();
     // offset enemy attackbox position as well (50 is width of sprite)
     this.attackBox.position.x = this.position.x + this.attackBox.offset.x;
     this.attackBox.position.y = this.position.y;
@@ -129,8 +181,11 @@ class Fighter {
     this.position.y += this.velocity.y;
 
     // if the position of the height of the velocity is greater than the height of the canvas, set the velocity to 0 which stops the object (player) from moving past the canvas
+    // gravity function
     if (this.position.y + this.height + this.velocity.y >= canvas.height - 96) {
       this.velocity.y = 0;
+      //   fix flash due to velocity and gravity code
+      this.position.y = 330;
     }
     // gravity is only added if the object is above canvas height
     else this.velocity.y += gravity;
@@ -139,10 +194,60 @@ class Fighter {
   // create an attack method (ie drawing out weapon)
 
   attack() {
+    this.switchSprite("attack1");
     this.isAttacking = true;
     // set a timer to activate for a certain period of time
     setTimeout(() => {
       this.isAttacking = false;
     }, 100);
+  }
+
+  //   add method for switching sprites
+  // make sure framesmax is also set once for  every state
+  switchSprite(sprite) {
+    if (
+      this.image === this.sprites.attack1.image &&
+      this.framesCurrent < this.sprites.attack1.framesMax - 1
+    )
+      return;
+
+    switch (sprite) {
+      case "idle":
+        if (this.image !== this.sprites.idle.image) {
+          this.image = this.sprites.idle.image;
+          this.framesMax = this.sprites.idle.framesMax;
+          //  reset the current frame when switching sprites
+          this.framesCurrent = 0;
+        }
+        break;
+      case "run":
+        if (this.image !== this.sprites.run.image) {
+          this.image = this.sprites.run.image;
+          this.framesMax = this.sprites.run.framesMax;
+          this.framesCurrent = 0;
+        }
+        break;
+      case "jump":
+        if (this.image !== this.sprites.jump.image) {
+          this.image = this.sprites.jump.image;
+          this.framesMax = this.sprites.jump.framesMax;
+          this.framesCurrent = 0;
+        }
+        break;
+      case "fall":
+        if (this.image !== this.sprites.fall.image) {
+          this.image = this.sprites.fall.image;
+          this.framesMax = this.sprites.fall.framesMax;
+          this.framesCurrent = 0;
+        }
+        break;
+      case "attack1":
+        if (this.image !== this.sprites.attack1.image) {
+          this.image = this.sprites.attack1.image;
+          this.framesMax = this.sprites.attack1.framesMax;
+          this.framesCurrent = 0;
+        }
+        break;
+    }
   }
 }

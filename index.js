@@ -53,6 +53,35 @@ const player = new Fighter({
     x: 0,
     y: 0,
   },
+  imageSrc: "./imgs/samuraiMack/Idle.png",
+  framesMax: 8,
+  scale: 2.5,
+  offset: {
+    x: 215,
+    y: 157,
+  },
+  sprites: {
+    idle: {
+      imageSrc: "./imgs/samuraiMack/Idle.png",
+      framesMax: 8,
+    },
+    run: {
+      imageSrc: "./imgs/samuraiMack/Run.png",
+      framesMax: 8,
+    },
+    jump: {
+      imageSrc: "./imgs/samuraiMack/Jump.png",
+      framesMax: 2,
+    },
+    fall: {
+      imageSrc: "./imgs/samuraiMack/Fall.png",
+      framesMax: 2,
+    },
+    attack1: {
+      imageSrc: "./imgs/samuraiMack/Attack1.png",
+      framesMax: 6,
+    },
+  },
 });
 
 // call our player - to see intial position
@@ -73,6 +102,35 @@ const enemy = new Fighter({
   offset: {
     x: -50,
     y: 0,
+  },
+  imageSrc: "./imgs/kenji/Idle.png",
+  framesMax: 4,
+  scale: 2.5,
+  offset: {
+    x: 215,
+    y: 170,
+  },
+  sprites: {
+    idle: {
+      imageSrc: "./imgs/kenji/Idle.png",
+      framesMax: 4,
+    },
+    run: {
+      imageSrc: "./imgs/kenji/Run.png",
+      framesMax: 8,
+    },
+    jump: {
+      imageSrc: "./imgs/kenji/Jump.png",
+      framesMax: 2,
+    },
+    fall: {
+      imageSrc: "./imgs/kenji/Fall.png",
+      framesMax: 2,
+    },
+    attack1: {
+      imageSrc: "./imgs/kenji/Attack1.png",
+      framesMax: 4,
+    },
   },
 });
 
@@ -126,18 +184,44 @@ function animate() {
   player.velocity.x = 0;
 
   if (keys.a.pressed && player.lastKey === "a") {
-    player.velocity.x = -3;
+    player.velocity.x = -5;
+    player.switchSprite("run");
   } else if (keys.d.pressed && player.lastKey == "d") {
-    player.velocity.x = 3;
+    player.velocity.x = 5;
+    player.switchSprite("run");
+  } else {
+    player.switchSprite("idle");
+  }
+
+  //   jumping
+  if (player.velocity.y < 0) {
+    player.switchSprite("jump");
+  }
+  //   falling
+  else if (player.velocity.y > 0) {
+    player.switchSprite("fall");
   }
 
   //   enemy movement
   enemy.velocity.x = 0;
 
   if (keys.ArrowLeft.pressed && enemy.lastKey === "ArrowLeft") {
-    enemy.velocity.x = -3;
+    enemy.velocity.x = -5;
+    enemy.switchSprite("run");
   } else if (keys.ArrowRight.pressed && enemy.lastKey == "ArrowRight") {
-    enemy.velocity.x = 3;
+    enemy.velocity.x = 5;
+    enemy.switchSprite("run");
+  } else {
+    enemy.switchSprite("idle");
+  }
+
+  //   jumping
+  if (enemy.velocity.y < 0) {
+    enemy.switchSprite("jump");
+  }
+  //   falling
+  else if (enemy.velocity.y > 0) {
+    enemy.switchSprite("fall");
   }
 
   //   detect for player collisions on x axis
