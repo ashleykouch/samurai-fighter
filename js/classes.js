@@ -88,6 +88,7 @@ class Fighter extends Sprite {
     offset = { x: 0, y: 0 },
     // create an object that contains all sprites for the specific fghter
     sprites,
+    attackBox = { offset: {}, width: undefined, height: undefined },
   }) {
     // call the constructor of the parent
     super({
@@ -116,9 +117,9 @@ class Fighter extends Sprite {
         x: this.position.x,
         y: this.position.y,
       },
-      offset,
-      width: 100,
-      height: 50,
+      offset: attackBox.offset,
+      width: attackBox.width,
+      height: attackBox.height,
     };
 
     this.color = color;
@@ -167,9 +168,19 @@ class Fighter extends Sprite {
   update() {
     this.draw();
     this.animateFrames();
+
+    // attack boxes
     // offset enemy attackbox position as well (50 is width of sprite)
     this.attackBox.position.x = this.position.x + this.attackBox.offset.x;
-    this.attackBox.position.y = this.position.y;
+    this.attackBox.position.y = this.position.y + this.attackBox.offset.y;
+
+    // draw the attack box
+    // c.fillRect(
+    //   this.attackBox.position.x,
+    //   this.attackBox.position.y,
+    //   this.attackBox.width,
+    //   this.attackBox.height
+    // );
 
     // overtime, y will have 10 pixels moved each time it loops
     // this.position.y += 10;
@@ -199,7 +210,7 @@ class Fighter extends Sprite {
     // set a timer to activate for a certain period of time
     setTimeout(() => {
       this.isAttacking = false;
-    }, 100);
+    }, 1000);
   }
 
   //   add method for switching sprites

@@ -82,6 +82,14 @@ const player = new Fighter({
       framesMax: 6,
     },
   },
+  attackBox: {
+    offset: {
+      x: 100,
+      y: 50,
+    },
+    width: 150,
+    height: 50,
+  },
 });
 
 // call our player - to see intial position
@@ -131,6 +139,14 @@ const enemy = new Fighter({
       imageSrc: "./imgs/kenji/Attack1.png",
       framesMax: 4,
     },
+  },
+  attackBox: {
+    offset: {
+      x: -165,
+      y: 50,
+    },
+    width: 165,
+    height: 50,
   },
 });
 
@@ -236,12 +252,18 @@ function animate() {
       rectangle2: enemy,
     }) &&
     // add conditional for if player is attacking
-    player.isAttacking
+    player.isAttacking &&
+    player.framesCurrent === 4
   ) {
     player.isAttacking = false;
     // enemy health bar decrease when hit
     enemy.health -= 5;
     document.querySelector("#enemyHealth").style.width = enemy.health + "%";
+  }
+
+  // if player misses
+  if (player.isAttacking && player.framesCurrent === 4) {
+    player.isAttacking = false;
   }
 
   //   enemy attacking
@@ -250,11 +272,17 @@ function animate() {
       rectangle1: enemy,
       rectangle2: player,
     }) &&
-    enemy.isAttacking
+    enemy.isAttacking &&
+    enemy.framesCurrent === 2
   ) {
     enemy.isAttacking = false;
     player.health -= 5;
     document.querySelector("#playerHealth").style.width = player.health + "%";
+  }
+
+  // if enemy misses
+  if (enemy.isAttacking && enemy.framesCurrent === 2) {
+    enemy.isAttacking = false;
   }
 
   //   end game if a players health bar reaches 0
